@@ -11,7 +11,7 @@ async function load_model() {
     // It's possible to load the model locally or from a repo
     // You can choose whatever IP and PORT you want in the "http://127.0.0.1:8080/model.json" just set it before in your https server
     //const model = await loadGraphModel("http://127.0.0.1:8080/model.json");
-    const model = await loadGraphModel("https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/model.json")
+    const model = await loadGraphModel("https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/model.json?token=GHSAT0AAAAAACCBGAKJAJBSFLWR7MCKQAKSZC76RDQ")
     return model;
   }
 
