@@ -19,11 +19,11 @@ class App extends Component {
     );
 
     this.metadata = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/username/repo/metadata.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/metadata.json"
     );
 
     this.colors = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/username/repo/colors.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/colors.json"
     );
 
     setInterval(() => {
