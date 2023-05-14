@@ -5,7 +5,7 @@ import {loadGraphModel} from '@tensorflow/tfjs-converter';
 import "./styles.css";
 tf.setBackend('webgl');
 
-const threshold = 0.50;
+const threshold = 0.10;
 
 async function load_model() {
     // It's possible to load the model locally or from a repo
@@ -81,7 +81,7 @@ class App extends React.Component {
         .getUserMedia({
           audio: false,
           video: {
-            facingMode: "user"
+            facingMode: "environment"
           }
         })
         .then(stream => {
