@@ -30,6 +30,23 @@ class App extends Component {
       this.detectObjects();
     }, 10);
   }
+  
+  const constraints = {
+  audio: false,
+  video: {
+    width: 416,
+    height: 416,
+    facingMode: "user"
+  }
+};
+
+navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) => {
+    video.srcObject = stream;
+  })
+  .catch((error) => {
+    console.error("Error accessing webcam: ", error);
+  });
 
   detectObjects = async () => {
     const video = this.webcamRef.current.video;
