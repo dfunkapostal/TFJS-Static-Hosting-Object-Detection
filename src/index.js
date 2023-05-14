@@ -123,31 +123,35 @@ class App extends React.Component {
     return expandedimg;
   };
 
-  buildDetectedObjects(scores, threshold, boxes, classes, classesDir) {
+ function buildDetectedObjects(scores, threshold, boxes, classes, classesDir) {
     const detectionObjects = []
     var video_frame = document.getElementById('frame');
 
-    scores[0].forEach((score, i) => {
-      if (score > threshold) {
-        const bbox = [];
-        const minY = boxes[0][i][0] * video_frame.offsetHeight;
-        const minX = boxes[0][i][1] * video_frame.offsetWidth;
-        const maxY = boxes[0][i][2] * video_frame.offsetHeight;
-        const maxX = boxes[0][i][3] * video_frame.offsetWidth;
-        bbox[0] = minX;
-        bbox[1] = minY;
-        bbox[2] = maxX - minX;
-        bbox[3] = maxY - minY;
-        detectionObjects.push({
-          class: classes[i],
-          label: classesDir[classes[i]].name,
-          score: score.toFixed(4),
-          bbox: bbox
-        })
-      }
-    })
-    return detectionObjects
-  }
+    for (let i = 0; i < scores[0].length; i++) {
+        if (scores[0][i] > threshold) {
+            const bbox = [];
+            const minY = boxes[0][i][0] * video_frame.offsetHeight;
+            const minX = boxes[0][i][1] * video_frame.offsetWidth;
+            const maxY = boxes[0][i][2] * video_frame.offsetHeight;
+            const maxX = boxes[0][i][3] * video_frame.offsetWidth;
+            bbox[0] = minX;
+            bbox[1] = minY;
+            bbox[2] = maxX - minX;
+            bbox[3] = maxY - minY;
+            const predictedClass = classes[i];
+            const classLabel = classesDir[predictedClass].name;
+            detectionObjects.push({
+                class: predictedClass,
+                label: classLabel,
+                score: scores[0][i].toFixed(4),
+                bbox: bbox
+            });
+        }
+    }
+
+    return detectionObjects;
+}
+
 
   renderPredictions = predictions => {
     const ctx = this.canvasRef.current.getContext("2d");
