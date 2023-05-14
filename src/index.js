@@ -16,57 +16,57 @@ async function load_model() {
   }
 
 let classesDir = {
-    0: {
-        name: 'BGalaxyPintoB',
-        id: 0,
-    },
     1: {
-        name: 'BlueBolt',
+        name: 'BGalaxyPintoB',
         id: 1,
     },
     2: {
-        name: 'CRS-CBS',
+        name: 'BlueBolt',
         id: 2,
     },
     3: {
-        name: 'FancyTigerB',
+        name: 'CRS-CBS',
         id: 3,
     },
     4: {
-        name: 'KingKongB',
+        name: 'FancyTigerB',
         id: 4,
     },
     5: {
-        name: 'Neo-Caridina',
+        name: 'KingKongB',
         id: 5,
     },
     6: {
-        name: 'OETB',
+        name: 'Neo-Caridina',
         id: 6,
     },
     7: {
-        name: 'PandaB',
-        id: 7,  
+        name: 'OETB',
+        id: 7,
     },
     8: {
-        name: 'RGalaxyPintoB',
+        name: 'PandaB',
         id: 8,  
     },
     9: {
-        name: 'RacoonTigerB',
+        name: 'RGalaxyPintoB',
         id: 9,  
     },
     10: {
-        name: 'ShadowMosura',
+        name: 'RacoonTigerB',
         id: 10,  
     },
     11: {
-        name: 'TangerineTigerB',
+        name: 'ShadowMosura',
         id: 11,  
     },
     12: {
-        name: 'WhiteGoldenB',
+        name: 'TangerineTigerB',
         id: 12,  
+    },
+    13: {
+        name: 'WhiteGoldenB',
+        id: 13,  
     },
 }
 
