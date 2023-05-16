@@ -18,15 +18,15 @@ class App extends Component {
 
   async componentDidMount() {
     this.model = await tf.loadGraphModel(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/model.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/model.json"
     );
 
     this.metadata = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/metadata.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/metadata.json"
     );
 
     this.colors = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-Detector/colors.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/colors.json"
     );
 
     setInterval(() => {
