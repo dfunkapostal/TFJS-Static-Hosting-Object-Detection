@@ -18,7 +18,7 @@ class App extends Component {
 
   async componentDidMount() {
     this.model = await tf.loadGraphModel(
-      "https://raw.githubusercontent.com/hugozanini/TFJS-object-detection/master/models/kangaroo-detector/model.json"
+      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/model.json"
     );
 
     this.metadata = await tfd.util.fetch(
