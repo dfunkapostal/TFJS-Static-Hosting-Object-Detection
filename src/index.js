@@ -5,6 +5,8 @@ import * as tfd from "@tensorflow/tfjs-data";
 import Webcam from "react-webcam";
 import { drawRect } from "./utilities";
 import "./styles.css";
+tf.setBackend('webgl');
+
 
 class App extends Component {
   constructor(props) {
