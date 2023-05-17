@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import * as tf from "@tensorflow/tfjs";
 import * as tfd from "@tensorflow/tfjs-data";
+import {loadGraphModel} from '@tensorflow/tfjs-converter';
 import Webcam from "react-webcam";
 import { drawRect } from "./utilities";
 import "./styles.css";
