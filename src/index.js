@@ -1,150 +1,175 @@
-import React, { Component } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import * as tf from "@tensorflow/tfjs";
-import * as tfd from "@tensorflow/tfjs-data";
+import * as tf from '@tensorflow/tfjs';
 import {loadGraphModel} from '@tensorflow/tfjs-converter';
-import Webcam from "react-webcam";
-import { drawRect } from "./utilities";
 import "./styles.css";
 tf.setBackend('webgl');
 
+const threshold = 0.75;
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.webcamRef = React.createRef();
-    this.canvasRef = React.createRef();
-    this.state = {
-      imageSrc: null
-    };
+async function load_model() {
+    // It's possible to load the model locally or from a repo
+    // You can choose whatever IP and PORT you want in the "http://127.0.0.1:8080/model.json" just set it before in your https server
+    //const model = await loadGraphModel("http://127.0.0.1:8080/model.json");
+    const model = await loadGraphModel("https://raw.githubusercontent.com/hugozanini/TFJS-object-detection/master/models/kangaroo-detector/model.json");
+    return model;
   }
 
-  async componentDidMount() {
-    this.model = await tf.loadGraphModel(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/model.json"
-    );
+let classesDir = {
+    1: {
+        name: 'Kangaroo',
+        id: 1,
+    },
+    2: {
+        name: 'Other',
+        id: 2,
+    }
+}
 
-    this.metadata = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/metadata.json"
-    );
+class App extends React.Component {
+  videoRef = React.createRef();
+  canvasRef = React.createRef();
 
-    this.colors = await tfd.util.fetch(
-      "https://raw.githubusercontent.com/dfunkapostal/TFJS-Static-Hosting-Object-Detection/main/models/Dwarf-Shrimp-DetectorV2/colors.json"
-    );
 
-    setInterval(() => {
-      this.detectObjects();
-    }, 10);
+  componentDidMount() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const webCamPromise = navigator.mediaDevices
+        .getUserMedia({
+          audio: false,
+          video: {
+            facingMode: "user"
+          }
+        })
+        .then(stream => {
+          window.stream = stream;
+          this.videoRef.current.srcObject = stream;
+          return new Promise((resolve, reject) => {
+            this.videoRef.current.onloadedmetadata = () => {
+              resolve();
+            };
+          });
+        });
+
+      const modelPromise = load_model();
+
+      Promise.all([modelPromise, webCamPromise])
+        .then(values => {
+          this.detectFrame(this.videoRef.current, values[0]);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    }
   }
 
-  handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => {
-    const img = new Image();
-    img.src = reader.result;
-    img.onload = () => {
-      const canvas = this.canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      this.detectObjects();
-    };
+    detectFrame = (video, model) => {
+        tf.engine().startScope();
+        model.executeAsync(this.process_input(video)).then(predictions => {
+        this.renderPredictions(predictions, video);
+        requestAnimationFrame(() => {
+          this.detectFrame(video, model);
+        });
+        tf.engine().endScope();
+      });
   };
-};
 
+  process_input(video_frame){
+    const tfimg = tf.browser.fromPixels(video_frame).toInt();
+    const expandedimg = tfimg.transpose([0,1,2]).expandDims();
+    return expandedimg;
+  };
 
-  detectObjects = async () => {
-    const video = this.webcamRef.current.video;
-    const { videoWidth, videoHeight } = video;
+  buildDetectedObjects(scores, threshold, boxes, classes, classesDir) {
+    const detectionObjects = []
+    var video_frame = document.getElementById('frame');
 
-    const tfImg = tf.browser.fromPixels(video);
-    const smallImg = tf.image.resizeBilinear(tfImg, [416, 416]);
-    const resized = tf.cast(smallImg, "float32").div(tf.scalar(255));
-    const input = tf.expandDims(resized, 0);
+    scores[0].forEach((score, i) => {
+      if (score > threshold) {
+        const bbox = [];
+        const minY = boxes[0][i][0] * video_frame.offsetHeight;
+        const minX = boxes[0][i][1] * video_frame.offsetWidth;
+        const maxY = boxes[0][i][2] * video_frame.offsetHeight;
+        const maxX = boxes[0][i][3] * video_frame.offsetWidth;
+        bbox[0] = minX;
+        bbox[1] = minY;
+        bbox[2] = maxX - minX;
+        bbox[3] = maxY - minY;
+        detectionObjects.push({
+          class: classes[i],
+          label: classesDir[classes[i]].name,
+          score: score.toFixed(4),
+          bbox: bbox
+        })
+      }
+    })
+    return detectionObjects
+  }
 
-    const { boxes, scores, classes } = await this.model.executeAsync({
-      image_tensor: input,
-    });
-
+  renderPredictions = predictions => {
     const ctx = this.canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const threshold = 0.5;
+    // Font options.
+    const font = "16px sans-serif";
+    ctx.font = font;
+    ctx.textBaseline = "top";
 
-    const boxesData = await boxes.data();
-    const scoresData = await scores.data();
-    const classesData = await classes.data();
+    //Getting predictions
+    const boxes = predictions[4].arraySync();
+    const scores = predictions[5].arraySync();
+    const classes = predictions[6].dataSync();
+    const detections = this.buildDetectedObjects(scores, threshold,
+                                    boxes, classes, classesDir);
 
-    for (let i = 0; i < scoresData.length; i++) {
-      const score = scoresData[i];
+    detections.forEach(item => {
+      const x = item['bbox'][0];
+      const y = item['bbox'][1];
+      const width = item['bbox'][2];
+      const height = item['bbox'][3];
 
-      if (score > threshold) {
-        const [y, x, h, w] = boxesData.slice(i * 4, (i + 1) * 4);
+      // Draw the bounding box.
+      ctx.strokeStyle = "#00FFFF";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, y, width, height);
 
-        const minY = Math.max(0, (y * videoHeight) / 416);
-        const minX = Math.max(0, (x * videoWidth) / 416);
-        const maxY = Math.min(videoHeight, (h * videoHeight) / 416);
-        const maxX = Math.min(videoWidth, (w * videoWidth) / 416);
+      // Draw the label background.
+      ctx.fillStyle = "#00FFFF";
+      const textWidth = ctx.measureText(item["label"] + " " + (100 * item["score"]).toFixed(2) + "%").width;
+      const textHeight = parseInt(font, 10); // base 10
+      ctx.fillRect(x, y, textWidth + 4, textHeight + 4);
+    });
 
-        const bbox = [minX, minY, maxX - minX, maxY - minY];
+    detections.forEach(item => {
+      const x = item['bbox'][0];
+      const y = item['bbox'][1];
 
-        const classId = classesData[i];
-        const className = this.metadata[classId]["name"];
-        const color = this.colors[className];
-
-        drawRect(bbox, ctx, color);
-
-        const text = `${className} ${Math.round(score * 100)}%`;
-        const textX = minX > 10 ? minX - 5 : minX + 5;
-        const textY = minY > 10 ? minY - 5 : minY + 20;
-
-        ctx.font = "14px Arial";
-        ctx.fillStyle = "#fff";
-        ctx.fillText(text, textX, textY);
-      }
-    }
-
-    tf.dispose([tfImg, smallImg, resized, input, boxes, scores, classes]);
-    requestAnimationFrame(() => {
-      this.detectObjects();
+      // Draw the text last to ensure it's on top.
+      ctx.fillStyle = "#000000";
+      ctx.fillText(item["label"] + " " + (100*item["score"]).toFixed(2) + "%", x, y);
     });
   };
 
   render() {
     return (
       <div>
-        <h1>Real-Time Object Detection: Dwarf Shrimp</h1>
+        <h1>Real-Time Object Detection: Kangaroo</h1>
         <h3>MobileNetV2</h3>
-        <div>
-          <label htmlFor="imageUpload">Upload an image:</label>
-          <input type="file" id="imageUpload" accept="image/*" onChange={this.handleImageUpload} />
-        </div>
-        {this.state.imageSrc && (
-          <div>
-            <h4>Uploaded Image:</h4>
-            <img src={this.state.imageSrc} alt="Uploaded Image" width="416" height="416" />
-          </div>
-        )}
         <video
-          style={{height: '416px', width: "416px"}}
+          style={{height: '600px', width: "500px"}}
           className="size"
           autoPlay
           playsInline
           muted
-          ref={this.webcamRef}
-          width="416"
-          height="416"
+          ref={this.videoRef}
+          width="600"
+          height="500"
           id="frame"
         />
         <canvas
           className="size"
           ref={this.canvasRef}
-          width="416"
-          height="416"
+          width="600"
+          height="500"
         />
       </div>
     );
