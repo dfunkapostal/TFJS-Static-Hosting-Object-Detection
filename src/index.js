@@ -5,7 +5,7 @@ import {loadGraphModel} from '@tensorflow/tfjs-converter';
 import "./styles.css";
 tf.setBackend('webgl');
 
-const threshold = 0.75;
+const threshold = 0.20;
 
 async function load_model() {
     // It's possible to load the model locally or from a repo
